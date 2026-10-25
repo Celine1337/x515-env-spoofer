@@ -921,11 +921,13 @@ def deploy_fingerprint():
 
 
 def launch_menu(fresh: bool):
-    p = current_profile()
+    p = pick_profile()
     fp = p.fingerprint()
     cfg = p.config()
     hr()
-    info("launching %s chromium" % ("FRESH-TEMP" if fresh else "PERSISTENT"))
+    info("launching %s chromium  [profile: %s]" % ("FRESH-TEMP" if fresh else "PERSISTENT", p.name))
+    if not fresh:
+        info("persistent mode: log in once, the session survives restarts")
     if not ask("continue ? [Y/n] : ").lower().startswith("n"):
         launch_browser(fp, cfg, fresh=fresh)
 
