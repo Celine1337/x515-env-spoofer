@@ -31,9 +31,12 @@ applications, and research on browser fingerprinting techniques.
 Requires Python 3.10+.
 
 ```
-python -m pip install colorama playwright
+python -m pip install colorama playwright patchright
 python -m playwright install chromium
 ```
+
+The launcher prefers the patchright engine (CDP protocol-level stealth,
+required for Google sign-in flows) and falls back to playwright.
 
 ## Run
 
@@ -45,7 +48,7 @@ python chess_env_spoofer.py
 
 ```
 python -m pip install pyinstaller
-pyinstaller --onefile --noconsole --collect-all playwright --name X515EnvSpoofer chess_env_spoofer.py
+pyinstaller --onefile --noconsole --collect-all playwright --collect-all patchright --name X515EnvSpoofer chess_env_spoofer.py
 ```
 
 Result: `dist\X515EnvSpoofer.exe`. The exe self-attaches a console, so

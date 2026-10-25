@@ -581,12 +581,20 @@ def _ensure_browsers():
 
 
 def launch_browser(fp: dict, cfg: dict, fresh=False):
+    engine = "playwright"
     try:
-        from playwright.sync_api import sync_playwright
+        from patchright.sync_api import sync_playwright
+        engine = "patchright"
     except ImportError:
-        err("playwright is missing  ->  pip install playwright  &&  playwright install chromium")
-        return None
+        try:
+            from playwright.sync_api import sync_playwright
+        except ImportError:
+            err("neither patchright nor playwright is installed")
+            err("-> pip install patchright && python -m patchright install chromium")
+            return None
+        warn("engine: playwright (google sign-in will block) -> pip install patchright")
 
+    info("engine: " + engine)
     _ensure_browsers()
 
     temp_holder = {}
