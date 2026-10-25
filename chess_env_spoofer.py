@@ -604,6 +604,15 @@ def launch_browser(fp: dict, cfg: dict, fresh=False):
 
     user_data_dir = str(temp_holder["dir"]) if fresh else str(PROFILE_DIR / fp["profile"] / "chrome-data")
 
+    if not fresh:
+        try:
+            ps = ("Get-CimInstance Win32_Process -Filter \"Name='chrome.exe'\" | "
+                  "Where-Object { $_.CommandLine -match 'ms-playwright' } | "
+                  "ForEach-Object { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue }")
+            subprocess.run(["powershell", "-NoProfile", "-Command", ps], capture_output=True, timeout=30)
+        except Exception:
+            pass
+
     launch_kw = dict(
         headless=False,
         viewport=None,
