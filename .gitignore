@@ -1,0 +1,12 @@
+venv/
+build/
+dist/
+*.spec
+
+profiles/
+state.json
+spoofer.log
+*.log
+
+__pycache__/
+*.py[co]
