@@ -8,6 +8,7 @@ import json
 import time
 import shutil
 import random
+import subprocess
 import urllib.request
 from pathlib import Path
 
@@ -552,12 +553,41 @@ def stealth_script(fp: dict) -> str:
     return STEALTH_JS.replace("/*__CFG__*/{}", json.dumps(fp, ensure_ascii=True))
 
 
+def _ms_browsers_dir() -> Path:
+    return Path(os.environ.get("LOCALAPPDATA", str(Path.home()))) / "ms-playwright"
+
+
+def _ensure_browsers():
+    if not getattr(sys, "frozen", False):
+        return
+    if "PLAYWRIGHT_BROWSERS_PATH" not in os.environ:
+        os.environ["PLAYWRIGHT_BROWSERS_PATH"] = str(_ms_browsers_dir())
+    bdir = Path(os.environ["PLAYWRIGHT_BROWSERS_PATH"])
+    if bdir.exists() and any(bdir.glob("chromium-*")):
+        return
+    import playwright
+    driver_dir = Path(playwright.__file__).resolve().parent / "driver"
+    node, cli = driver_dir / "node.exe", driver_dir / "package" / "cli.js"
+    if not (node.exists() and cli.exists()):
+        err("chromium not found and bundled installer unavailable")
+        err("run once: pip install playwright && python -m playwright install chromium")
+        return
+    ok("chromium missing -> downloading (~200 MB, one time)")
+    try:
+        subprocess.run([str(node), str(cli), "install", "chromium"], check=True)
+        ok("chromium installed")
+    except Exception as e:
+        err("chromium download failed: " + str(e))
+
+
 def launch_browser(fp: dict, cfg: dict, fresh=False):
     try:
         from playwright.sync_api import sync_playwright
     except ImportError:
         err("playwright is missing  ->  pip install playwright  &&  playwright install chromium")
         return None
+
+    _ensure_browsers()
 
     temp_holder = {}
     if fresh:
@@ -595,7 +625,7 @@ def launch_browser(fp: dict, cfg: dict, fresh=False):
             warn("goto chess.com failed: " + str(e))
             warn("check proxy / connection; browser still open for manual nav.")
         ok("browser live - fingerprint active")
-        info("user data dir " + (temp_holder["dir"] if fresh else Path(user_data_dir)))
+        info("user data dir " + str(temp_holder["dir"] if fresh else Path(user_data_dir)))
         try:
             while ctx.pages:
                 time.sleep(1.0)
